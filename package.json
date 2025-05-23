@@ -1,0 +1,12 @@
+{
+    "name": "my-dapp-project",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.html",
+    "scripts": {
+      "start": "lite-server"
+    },
+    "devDependencies": {
+      "lite-server": "^2.6.1"
+    }
+  }

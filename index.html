@@ -1,55 +1,83 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Product Registration DApp</title>
-  <style>
-    body {
-      text-align: center;
-      font-family: Arial, Helvetica, sans-serif;
-    }
-    div {
-      width: 60%;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    input, button {
-      width: 100%;
-      margin: 5px 0;
-      padding: 10px;
-    }
-  </style>
+     <style>
+body {
+text-align: center;
+font-family: Arial, Helvetica, sans-serif;
+}
+div {
+width: 20%;
+margin: 0 auto;
+display: flex;
+flex-direction: column;
+}
+button {
+width: 100%;
+margin: 10px 0px 5px 0px;
+}
+</style>
+
+	<title>Verification Contract Interface</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 </head>
 <body>
+  <h2>Product Verification Portal</h2>
+
+  
+
+  <h3>Assign Role (Admin Only)</h3>
+  <input type="text" id="roleAddress" placeholder="User Address">
+  <select id="role">
+    <option value="1">Manufacturer</option>
+    <option value="2">Distributor</option>
+    <option value="3">Hospital</option>
+    <option value="4">Regulator</option>
+  </select>
+  <button onclick="assignRole()">Assign Role</button>
+  <p id="assignStatus"></p>
+
+  <h3>Verify Product (Hospital Only)</h3>
+  <input type="text" id="productId" placeholder="Product ID">
+  <input type="text" id="usageNote" placeholder="Usage Note">
+  <button onclick="verifyProduct()">Verify Product</button>
+  <p id="verifyStatus"></p>
+
+  <h3>Check Verification History</h3>
+  <input type="text" id="historyProductId" placeholder="Product ID">
+  <button onclick="getHistory()">Get History</button>
+  <pre id="historyResult"></pre>
+
+  <h3>Check Product Verification Status</h3>
+  <input type="text" id="checkProductId" placeholder="Product ID">
+  <button onclick="checkStatus()">Check Status</button>
+  <p id="statusResult"></p>
+
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
-  <div>
-    <h1>Register a Product</h1>
-    <input type="text" id="productId" placeholder="Product ID" />
-    <input type="text" id="name" placeholder="Product Name" />
-    <input type="text" id="manufacturer" placeholder="Manufacturer" />
-    <input type="text" id="batchNumber" placeholder="Batch Number" />
-    <input type="date" id="productionDate" />
-    <input type="date" id="expiryDate" />
-    <input type="text" id="regulatoryApproval" placeholder="Regulatory Approval" />
-    <button onclick="registerProduct()">Register Product</button>
-    <hr />
-    <input type="text" id="searchProductId" placeholder="Enter Product ID to Fetch" />
-    <button onclick="getProduct()">Get Product Info</button>
-    <pre id="productInfo"></pre>
-  </div>
-
   <script>
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const contractAddress = "0x77F77216500cb4e05701192A96bD972D3895D919"; 
-    const contractABI = [  
-      {
-        
-	
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const NameContractAddress = "0x0181cCbD4AD91cF49e1284Bc44A5d5e98493a5a0";
+      const NameContractABI = [ [
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			},
+			{
+				"internalType": "enum VerificationContract.Role",
+				"name": "_role",
+				"type": "uint8"
+			}
+		],
+		"name": "assignRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
@@ -64,50 +92,57 @@
 				"type": "string"
 			},
 			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "name",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "manufacturer",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "batchNumber",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "productionDate",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "expiryDate",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "regulatoryApproval",
-				"type": "string"
-			},
-			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "address",
-				"name": "registeredBy",
+				"name": "verifier",
 				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "usageNote",
+				"type": "string"
 			}
 		],
-		"name": "ProductRegistered",
+		"name": "ProductVerified",
 		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "enum VerificationContract.Role",
+				"name": "role",
+				"type": "uint8"
+			}
+		],
+		"name": "RoleAssigned",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_productId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_usageNote",
+				"type": "string"
+			}
+		],
+		"name": "verifyAndUseProduct",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
 	},
 	{
 		"inputs": [],
@@ -130,117 +165,11 @@
 				"type": "string"
 			}
 		],
-		"name": "getProduct",
+		"name": "checkVerificationStatus",
 		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "productId",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "name",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "manufacturer",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "batchNumber",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "productionDate",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "expiryDate",
-						"type": "uint256"
-					},
-					{
-						"internalType": "string",
-						"name": "regulatoryApproval",
-						"type": "string"
-					},
-					{
-						"internalType": "address",
-						"name": "registeredBy",
-						"type": "address"
-					},
-					{
-						"internalType": "bool",
-						"name": "isRegistered",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct RegistrationContract.Product",
-				"name": "",
-				"type": "tuple"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"name": "products",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "productId",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "name",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "manufacturer",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "batchNumber",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256",
-				"name": "productionDate",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "expiryDate",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "regulatoryApproval",
-				"type": "string"
-			},
-			{
-				"internalType": "address",
-				"name": "registeredBy",
-				"type": "address"
-			},
 			{
 				"internalType": "bool",
-				"name": "isRegistered",
+				"name": "",
 				"type": "bool"
 			}
 		],
@@ -253,105 +182,188 @@
 				"internalType": "string",
 				"name": "_productId",
 				"type": "string"
-			},
+			}
+		],
+		"name": "getVerificationHistory",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "productId",
+						"type": "string"
+					},
+					{
+						"internalType": "address",
+						"name": "verifier",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "usageNote",
+						"type": "string"
+					}
+				],
+				"internalType": "struct VerificationContract.VerificationRecord[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
 			{
 				"internalType": "string",
-				"name": "_name",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_manufacturer",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_batchNumber",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_productionDate",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_expiryDate",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "_regulatoryApproval",
+				"name": "",
 				"type": "string"
 			}
 		],
-		"name": "registerProduct",
-		"outputs": [],
-		"stateMutability": "nonpayable",
+		"name": "isVerified",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "roles",
+		"outputs": [
+			{
+				"internalType": "enum VerificationContract.Role",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "verificationHistory",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "productId",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "verifier",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "usageNote",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	}
+] ];
+      let NameContract;
+      let signer;
 
-      
-    ];
-
-    let contract;
-    let signer;
-
-    async function connectContract() {
-      await provider.send("eth_requestAccounts", []);
-      signer = provider.getSigner();
-      contract = new ethers.Contract(contractAddress, contractABI, signer);
-    }
-
-    async function registerProduct() {
-      await connectContract();
-      const productId = document.getElementById("productId").value;
-      const name = document.getElementById("name").value;
-      const manufacturer = document.getElementById("manufacturer").value;
-      const batchNumber = document.getElementById("batchNumber").value;
-      const productionDate = Math.floor(new Date(document.getElementById("productionDate").value).getTime() / 1000);
-      const expiryDate = Math.floor(new Date(document.getElementById("expiryDate").value).getTime() / 1000);
-      const regulatoryApproval = document.getElementById("regulatoryApproval").value;
-
-      try {
-        const tx = await contract.registerProduct(
-          productId, name, manufacturer, batchNumber, productionDate, expiryDate, regulatoryApproval
+    provider.send("eth_requestAccounts", []).then(() => {
+      provider.listAccounts().then((accounts) => {
+        signer = provider.getSigner(accounts[0]);
+        NameContract = new ethers.Contract(
+          NameContractAddress,
+          NameContractABI,
+          signer
         );
+      });
+    });
+
+    
+    async function assignRole() {
+      const address = document.getElementById("roleAddress").value;
+      const role = document.getElementById("role").value;
+      try {
+        const tx = await contract.assignRole(address, role);
         await tx.wait();
-        alert("Product registered successfully!");
-      } catch (error) {
-        console.error(error);
-        alert("Failed to register product.");
-        if (!productId || !name || !manufacturer || !batchNumber || !regulatoryApproval) {
-        alert("Please fill in all fields.");
-        return;
-        }
+        document.getElementById("assignStatus").innerText = "Role assigned successfully!";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("assignStatus").innerText = "Error: " + err.message;
       }
     }
 
-    async function getProduct() {
-      await connectContract();
-      const productId = document.getElementById("searchProductId").value;
-
+    async function verifyProduct() {
+      const productId = document.getElementById("productId").value;
+      const usageNote = document.getElementById("usageNote").value;
       try {
-        const product = await contract.getProduct(productId);
-        const info = `
-Product ID: ${product.productId}
-Name: ${product.name}
-Manufacturer: ${product.manufacturer}
-Batch Number: ${product.batchNumber}
-Production Date: ${new Date(product.productionDate * 1000).toDateString()}
-Expiry Date: ${new Date(product.expiryDate * 1000).toDateString()}
-Approval: ${product.regulatoryApproval}
-Registered By: ${product.registeredBy}
-Registered: ${product.isRegistered}
-        `;
-        document.getElementById("productInfo").innerText = info;
-      } catch (error) {
-        console.error(error);
-        alert("Failed to fetch product.");
+        const tx = await contract.verifyAndUseProduct(productId, usageNote);
+        await tx.wait();
+        document.getElementById("verifyStatus").innerText = "Product verified successfully!";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("verifyStatus").innerText = "Verification failed: " + err.message;
+      }
+    }
+
+    async function getHistory() {
+      const productId = document.getElementById("historyProductId").value;
+      try {
+        const history = await contract.getVerificationHistory(productId);
+        let output = "";
+        history.forEach(record => {
+          output += `Verifier: ${record.verifier}\nTime: ${new Date(record.timestamp * 1000).toLocaleString()}\nNote: ${record.usageNote}\n\n`;
+        });
+        document.getElementById("historyResult").innerText = output || "No history found.";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("historyResult").innerText = "Failed to fetch history.";
+      }
+    }
+
+    async function checkStatus() {
+      const productId = document.getElementById("checkProductId").value;
+      try {
+        const isVerified = await contract.checkVerificationStatus(productId);
+        document.getElementById("statusResult").innerText = isVerified ? "Product is verified." : "Product is NOT verified.";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("statusResult").innerText = "Failed to check status.";
       }
     }
   </script>
+  
+  
+
 </body>
 </html>
