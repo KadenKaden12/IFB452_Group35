@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Registration DApp</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    div {
+      width: 60%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    input, button {
+      width: 100%;
+      margin: 5px 0;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+  <div>
+    <h1>Register a Product</h1>
+    <input type="text" id="productId" placeholder="Product ID" />
+    <input type="text" id="name" placeholder="Product Name" />
+    <input type="text" id="manufacturer" placeholder="Manufacturer" />
+    <input type="text" id="batchNumber" placeholder="Batch Number" />
+    <input type="date" id="productionDate" />
+    <input type="date" id="expiryDate" />
+    <input type="text" id="regulatoryApproval" placeholder="Regulatory Approval" />
+    <button onclick="registerProduct()">Register Product</button>
+    <hr />
+    <input type="text" id="searchProductId" placeholder="Enter Product ID to Fetch" />
+    <button onclick="getProduct()">Get Product Info</button>
+    <pre id="productInfo"></pre>
+
+	<div style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
+		<button onclick="location.href='index.html'">Go to Registration</button>
+		<button onclick="location.href='transfer.html'">Go to Transfer</button>
+		<button onclick="location.href='verification.html'">Go to Verification</button>
+	  </div>
+	  <hr />
+	  
+  </div>
+
+  <script>
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const contractAddress = "0x77F77216500cb4e05701192A96bD972D3895D919"; 
+    const contractABI = [  
+      {
+        
+	
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "string",
+				"name": "productId",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "manufacturer",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "batchNumber",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "productionDate",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "expiryDate",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "regulatoryApproval",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "registeredBy",
+				"type": "address"
+			}
+		],
+		"name": "ProductRegistered",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "admin",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_productId",
+				"type": "string"
+			}
+		],
+		"name": "getProduct",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "productId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "manufacturer",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "batchNumber",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "productionDate",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "expiryDate",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "regulatoryApproval",
+						"type": "string"
+					},
+					{
+						"internalType": "address",
+						"name": "registeredBy",
+						"type": "address"
+					},
+					{
+						"internalType": "bool",
+						"name": "isRegistered",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct RegistrationContract.Product",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "products",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "productId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "manufacturer",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "batchNumber",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "productionDate",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "expiryDate",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "regulatoryApproval",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "registeredBy",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "isRegistered",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_productId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_name",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_manufacturer",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_batchNumber",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_productionDate",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_expiryDate",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "_regulatoryApproval",
+				"type": "string"
+			}
+		],
+		"name": "registerProduct",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+
+      
+    ];
+
+    let contract;
+    let signer;
+
+    async function connectContract() {
+      await provider.send("eth_requestAccounts", []);
+      signer = provider.getSigner();
+      contract = new ethers.Contract(contractAddress, contractABI, signer);
+    }
+
+    async function registerProduct() {
+      await connectContract();
+      const productId = document.getElementById("productId").value;
+      const name = document.getElementById("name").value;
+      const manufacturer = document.getElementById("manufacturer").value;
+      const batchNumber = document.getElementById("batchNumber").value;
+      const productionDate = Math.floor(new Date(document.getElementById("productionDate").value).getTime() / 1000);
+      const expiryDate = Math.floor(new Date(document.getElementById("expiryDate").value).getTime() / 1000);
+      const regulatoryApproval = document.getElementById("regulatoryApproval").value;
+
+      try {
+        const tx = await contract.registerProduct(
+          productId, name, manufacturer, batchNumber, productionDate, expiryDate, regulatoryApproval
+        );
+        await tx.wait();
+        alert("Product registered successfully!");
+      } catch (error) {
+        console.error(error);
+        alert("Failed to register product.");
+        if (!productId || !name || !manufacturer || !batchNumber || !regulatoryApproval) {
+        alert("Please fill in all fields.");
+        return;
+        }
+      }
+    }
+
+    async function getProduct() {
+      await connectContract();
+      const productId = document.getElementById("searchProductId").value;
+
+      try {
+        const product = await contract.getProduct(productId);
+        const info = `
+Product ID: ${product.productId}
+Name: ${product.name}
+Manufacturer: ${product.manufacturer}
+Batch Number: ${product.batchNumber}
+Production Date: ${new Date(product.productionDate * 1000).toDateString()}
+Expiry Date: ${new Date(product.expiryDate * 1000).toDateString()}
+Approval: ${product.regulatoryApproval}
+Registered By: ${product.registeredBy}
+Registered: ${product.isRegistered}
+        `;
+        document.getElementById("productInfo").innerText = info;
+      } catch (error) {
+        console.error(error);
+        alert("Failed to fetch product.");
+      }
+    }
+  </script>
+
+</body>
+</html>
