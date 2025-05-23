@@ -2,7 +2,7 @@
     "name": "my-dapp-project",
     "version": "1.0.0",
     "description": "",
-    "main": "index.html",
+    "main": "verification.html",
     "scripts": {
       "start": "lite-server"
     },
