@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Transfer a Contract</title>
+    <style>
+    body {
+      text-align: center;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    div {
+      width: 60%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    input, button {
+      width: 100%;
+      margin: 5px 0;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+    <div>
+    <h1>Transfer a Contract</h1>
+
+    <button onclick="connectWallet()">Connect Wallet</button>
+    <p id="walletAddress"></p>
+
+    <hr>
+
+    <h2>Assign Role</h2>
+    <input id="roleAddress" placeholder="Address" />
+    <select id="roleValue">
+        <option value="1">Manufacturer</option>
+        <option value="2">Distributor</option>
+        <option value="3">Hospital</option>
+    </select>
+    <button onclick="assignRole()">Assign Role</button>
+
+    <hr>
+
+    <h2>Set Initial Owner</h2>
+    <input id="productIdInit" placeholder="Product ID" />
+    <input id="ownerAddressInit" placeholder="Owner Address" />
+    <button onclick="setInitialOwner()">Set Owner</button>
+
+    <hr>
+
+    <h2>Request Transfer</h2>
+    <input id="productIdReq" placeholder="Product ID" />
+    <input id="toAddressReq" placeholder="Recipient Address" />
+    <button onclick="requestTransfer()">Request Transfer</button>
+
+    <hr>
+
+    <h2>Accept Transfer</h2>
+    <input id="productIdAccept" placeholder="Product ID" />
+    <button onclick="acceptTransfer()">Accept Transfer</button>
+
+    <hr>
+
+    <h2>Get Transfer History</h2>
+    <input id="productIdHist" placeholder="Product ID" />
+    <button onclick="getTransferHistory()">Get History</button>
+    <pre id="historyResult"></pre>
+
+    <hr>
+
+    <h2>Get Current Owner</h2>
+    <input id="productIdOwner" placeholder="Product ID" />
+    <button onclick="getCurrentOwner()">Get Owner</button>
+    <p id="ownerResult"></p>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+    <script>
+        let web3;
+        let contract;
+        const contractAddress = "0xa2D9ea4EfB898Ab130FAb6a5eC9357D19D631d87";
+        const contractABI = [
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_productId",
+				"type": "string"
+			}
+		],
+		"name": "acceptTransfer",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			},
+			{
+				"internalType": "enum TransferContract.Role",
+				"name": "_role",
+				"type": "uint8"
+			}
+		],
+		"name": "assignRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_productId",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "_to",
+				"type": "address"
+			}
+		],
+		"name": "requestTransfer",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_productId",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "_owner",
+				"type": "address"
+			}
+		],
+		"name": "setInitialOwner",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "enum TransferContract.Role",
+				"name": "role",
+				"type": "uint8"
+			}
+		],
+		"name": "RoleAssigned",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "string",
+				"name": "productId",
+				"type": "string"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			}
+		],
+		"name": "TransferAccepted",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "string",
+				"name": "productId",
+				"type": "string"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			}
+		],
+		"name": "TransferRequested",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "admin",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_productId",
+				"type": "string"
+			}
+		],
+		"name": "getCurrentOwner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_productId",
+				"type": "string"
+			}
+		],
+		"name": "getTransferHistory",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "productId",
+						"type": "string"
+					},
+					{
+						"internalType": "address",
+						"name": "from",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "accepted",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct TransferContract.TransferRequest[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "pendingTransfers",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "productId",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "accepted",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "productOwner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "roles",
+		"outputs": [
+			{
+				"internalType": "enum TransferContract.Role",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "transferHistory",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "productId",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "accepted",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
+
+        async function connectWallet() {
+            if (window.ethereum) {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                web3 = new Web3(window.ethereum);
+                const accounts = await web3.eth.getAccounts();
+                document.getElementById("walletAddress").innerText = "Connected: " + accounts[0];
+                contract = new web3.eth.Contract(contractABI, contractAddress);
+            } else {
+                alert("MetaMask not detected!");
+            }
+        }
+
+        async function assignRole() {
+            const addr = document.getElementById("roleAddress").value;
+            const role = document.getElementById("roleValue").value;
+            const accounts = await web3.eth.getAccounts();
+            await contract.methods.assignRole(addr, role).send({ from: accounts[0] });
+            alert("Role assigned!");
+        }
+
+        async function setInitialOwner() {
+            const id = document.getElementById("productIdInit").value;
+            const owner = document.getElementById("ownerAddressInit").value;
+            const accounts = await web3.eth.getAccounts();
+            await contract.methods.setInitialOwner(id, owner).send({ from: accounts[0] });
+            alert("Owner set!");
+        }
+
+        async function requestTransfer() {
+            const role = await contract.methods.roles('0x3cd19F2F842c8D45A3Df38e45D9bA5e30FC26d8d').call();
+            console.log("Role is", role);
+            try {
+                const id = document.getElementById("productIdReq").value;
+                const to = document.getElementById("toAddressReq").value;
+                console.log(id, to);
+                const accounts = await web3.eth.getAccounts();
+                console.log(accounts);
+                await contract.methods.requestTransfer(id, to).send({ from: accounts[0] });
+                alert("Transfer requested!");
+            } catch (error) {
+                console.log(error);
+                return;
+            }
+            
+        }
+
+        async function acceptTransfer() {
+            const id = document.getElementById("productIdAccept").value;
+            const accounts = await web3.eth.getAccounts();
+            await contract.methods.acceptTransfer(id).send({ from: accounts[0] });
+            alert("Transfer accepted!");
+        }
+
+        async function getTransferHistory() {
+            const id = document.getElementById("productIdHist").value;
+            const history = await contract.methods.getTransferHistory(id).call();
+            document.getElementById("historyResult").innerText = JSON.stringify(history, null, 2);
+        }
+
+        async function getCurrentOwner() {
+            const id = document.getElementById("productIdOwner").value;
+            const owner = await contract.methods.getCurrentOwner(id).call();
+            document.getElementById("ownerResult").innerText = "Current owner: " + owner;
+        }
+    </script>
+</body>
+</html>
